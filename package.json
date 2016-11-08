@@ -1,0 +1,38 @@
+{
+  "name": "exultant-songs",
+  "version": "1.0.0",
+  "description": "CCNQ4 click-to-dial (via socket.io)",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shimaore/exultant-songs.git"
+  },
+  "keywords": [
+    "click-to-dial",
+    "ccnq4"
+  ],
+  "author": "Stéphane Alnet <stephane@shimaore.net> (https://stephane.shimaore.net/)",
+  "license": "Unlicense",
+  "bugs": {
+    "url": "https://github.com/shimaore/exultant-songs/issues"
+  },
+  "homepage": "https://github.com/shimaore/exultant-songs#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "coffee-coverage": "^1.0.1",
+    "coffee-script": "^1.11.1",
+    "mocha": "^3.1.2"
+  },
+  "dependencies": {
+    "debug": "^2.3.0",
+    "esl": "^5.2.2",
+    "seem": "^2.0.0",
+    "socket.io-client": "^1.5.1"
+  }
+}
