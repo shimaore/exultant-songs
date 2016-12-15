@@ -4,8 +4,9 @@ Auto-call
 This module places calls (presumably towards a client or Centrex extension) and sends them into the socket we control.
 It ensures data is retrieved and injected in the call.
 
+    seem = require 'seem'
+    PouchDB = require 'shimaore-pouchdb'
     FS = require 'esl'
-    io = require 'socket.io-client'
 
     db = null
 
@@ -13,18 +14,17 @@ It ensures data is retrieved and injected in the call.
     @name = "#{pkg.name}:place-call"
     debug = (require 'debug') @name
 
-    @server_pre = ->
+    @notify = ({socket}) ->
 
-* cfg.notify (socket.io URI) used to receive notifications (`place-call` messages) for automated calls.
+Report `place-call` messages over socket.io.
 
-      unless @cfg.notify?
-        debug 'Missing cfg.notify, not starting.'
-        return
+      @cfg.statistics?.on 'place-call', (data) ->
+        socket.emit 'place-call', data
 
 * cfg.session.db (URI) database used to store automated calls records.
 
       unless @cfg.session?.db?
-        debug 'Missing cfg.session_db, not starting.'
+        debug 'Missing cfg.session.db, not starting.'
         return
 
 * cfg.session.profile (string) Sofia profile that should be used to place calls towards client, for automated calls.
@@ -37,29 +37,40 @@ See conf/freeswitch
 
       socket_port = @cfg.profiles?[@cfg.session.profile]?.socket_port ? 5721
 
-      socket = io @cfg.notify
+Register the database we use to store session state.
+FIXME: use redis instead.
+
       db = new PouchDB @cfg.session.db
 
 Connect a single client, and push new calls through it. The calls are automatically sent back to ourselves so that they can be processed like regular outbound calls.
 
       client = FS.client ->
-        socket.on 'place-call', (data) ->
+        socket.on 'place-call', seem (data) =>
+          return unless data._id?.match /^[\w-]+$/
           debug 'Placing call towards caller'
           {rev} = yield db.put data
           data._rev = rev
-          socket.emit 'place-call:connecting-caller', data
-          {uuid} = res = yield @api "originate {session_reference=#{data._id}}sofia/#{@cfg.session.profile}/sip:#{data.caller} &socket(127.0.0.1:#{socket_port} async full)"
-          socket.emit 'place-call:caller-connected', data
+          data._in = [
+            "endpoint:#{data.endpoint}"
+            "account:#{data.account}"
+          ]
+          data.host = @cfg.host
+          data.state = 'connecting-caller'
+          socket.emit 'place-call', data
+          {uuid} = res = yield @api "originate {session_reference=#{data._id}}sofia/#{@cfg.session.profile}-egress/sip:#{data.caller} &socket(127.0.0.1:#{socket_port} async full)"
+          data.state = 'caller-connected'
+          socket.emit 'place-call', data
           debug 'Caller connected'
         debug 'Client ready'
 
       client.connect (@cfg.socket_port ? 5722), '127.0.0.1'
       debug 'Module Ready'
 
-    @include = ->
-      return unless @data.session_reference?
+    @include = seem ->
+      session_reference = @req.variable 'session_reference'
+      return unless session_reference?
 
-      @session.placed_call_data = data = yield db.get @data.session_reference
+      @session.placed_call_data = data = yield db.get session_reference
 
 Inject data from the session reference as-if it had been provided to us by FreeSwitch.
 
@@ -71,5 +82,19 @@ Inject data from the session reference as-if it had been provided to us by FreeS
 - data used by this module
 
       @call["variable_sip_h_P-Charge-Info"] ?= data.account
-      @call["vairable_sip_h_X-CCNQ3-Endpoint"] ?= data.endpoint
-      @data['Channel-Context'] = [@cfg.session.profile,'egress'].join '-'
+      @call["variable_sip_h_X-CCNQ3-Endpoint"] ?= data.endpoint
+
+TBD: Check whether Channel-Context is pre-set or not.
+
+      @data['Channel-Context'] = [ @cfg.session.profile, 'egress' ].join '-'
+
+      data.state = 'routing'
+      @statistics.emit 'place-call', data
+
+Send a notification at the end of the call leg.
+
+      @call.once 'cdr_report', (report) =>
+        data.state = 'reporting'
+        for own k,v of report
+          data[k] ?= v
+        @statistics?.emit 'place-call', data
