@@ -4,7 +4,8 @@ FIXME: use redis instead.
     seem = require 'seem'
     PouchDB = require 'pouchdb'
     uuidV4 = require 'uuid/v4'
-    debug = (require 'debug') 'exultant-songs:middleware:reference_in_pouchdb'
+    @name = 'exultant-songs:middleware:reference_in_pouchdb'
+    debug = (require 'debug') @name
 
     sleep = (timeout) ->
       new Promise (resolve) ->
