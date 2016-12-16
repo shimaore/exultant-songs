@@ -14,7 +14,7 @@ FIXME: use redis instead.
 
 * cfg.session.db (URI) database used to store automated / complete call records (call-center oriented)
 
-      unless @cfg.session.db?
+      unless @cfg.session?.db?
         debug 'Missing cfg.session.db, not starting.'
         return
 
