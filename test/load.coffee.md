@@ -19,8 +19,7 @@
             data:
               'Channel-Context': 'sbc-ingress'
           M = require "../#{m}"
-          yield M.server_pre?.call ctx, ctx
-          yield M.include.call ctx, ctx
+          yield M.notify.call ctx, ctx
 
       for m in list
         unit m
