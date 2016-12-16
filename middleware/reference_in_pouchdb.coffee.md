@@ -19,6 +19,10 @@ FIXME: use redis instead.
         debug 'Missing cfg.session.db, not starting.'
         return
 
+      if @cfg.get_session_reference_data? or @cfg.update_session_reference_data?
+        debug 'Another module provided the functions, not starting.'
+        return
+
 * cfg.session.db (URI) The PouchDB URI of the database used to store call reference data
 
       db = new PouchDB @cfg.session.db
