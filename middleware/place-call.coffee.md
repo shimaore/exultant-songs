@@ -34,6 +34,9 @@ Connect a single client, and push new calls through it. The calls are automatica
         socket.on 'place-call', seem (data) =>
           return unless data._id?.match /^[\w-]+$/
           debug 'Placing call towards caller'
+
+FIXME The data sender must do resolution of the endpoint_via and associated translations????
+
           yield cfg.set_session_reference_data data
           data._in = [
             "endpoint:#{data.endpoint}"
