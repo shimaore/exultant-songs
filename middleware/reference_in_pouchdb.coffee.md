@@ -38,7 +38,7 @@ FIXME: use redis instead.
         for own k,v of data when k[0] isnt '_'
           prev[k] = v
         {rev} = yield db
-          .put data
+          .put prev
           .catch seem (error) ->
             debug "error: #{error.stack ? error}"
             if tries-- > 0
@@ -46,5 +46,6 @@ FIXME: use redis instead.
               yield save_data data, tries
             rev: data._rev
         data._rev = rev
+        return
 
       debug 'Ready.'
