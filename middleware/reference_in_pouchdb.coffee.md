@@ -43,6 +43,8 @@ FIXME: use redis instead.
             debug "error: #{error.stack ? error}"
             if tries-- > 0
               yield sleep 173
-              save_data data
+              yield save_data data, tries
             rev: data._rev
         data._rev = rev
+
+      debug 'Ready.'
