@@ -1,6 +1,6 @@
 {
   "name": "exultant-songs",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "CCNQ4 click-to-dial (via socket.io)",
   "main": "index.js",
   "directories": {
