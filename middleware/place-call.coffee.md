@@ -36,6 +36,7 @@ Connect a single client, and push new calls through it. The calls are automatica
 
       client = FS.client ->
         socket.on 'place-call', seem (data) =>
+          debug 'received place-call', data
           return unless data._id?.match /^[\w-]+$/
           debug 'Placing call towards caller'
 
@@ -59,5 +60,9 @@ FIXME The data sender must do resolution of the endpoint_via and associated tran
 
       client.connect (@cfg.socket_port ? 5722), '127.0.0.1'
 
+      socket.on 'configured', (data) ->
+        debug 'Socket configured', data
+
       socket.emit 'configure', dial_calls: true
+
       debug 'Module Ready'
