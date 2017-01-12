@@ -96,7 +96,7 @@ cid_num -- called_num, shows on the caller's phone and in Channel-(Orig-)Callee-
 
 timeout_sec
 
-            data.callee_timeout ? 30
+            data.call_timeout ? ''
 
           ].join ' '
           cmd = "originate #{argv}"
