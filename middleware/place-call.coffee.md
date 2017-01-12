@@ -41,18 +41,80 @@ Connect a single client, and push new calls through it. The calls are automatica
           debug 'Placing call towards caller'
 
 FIXME The data sender must do resolution of the endpoint_via and associated translations????
+ANSWER: Yes. And store the result in `caller`.
 
           yield cfg.update_session_reference_data data
           data._in = [
             "endpoint:#{data.endpoint}"
             "account:#{data.account}"
           ]
-          data.host = @cfg.host
+          data.host = cfg.host
           data.state = 'connecting-caller'
           socket.emit 'reference', data
-          {uuid} = res = yield @api "originate {session_reference=#{data._id},origination_uuid=#{data._id}}sofia/#{@cfg.session.profile}-egress/sip:#{data.caller} &socket(127.0.0.1:#{socket_port} async full)"
-          data.state = 'caller-connected'
-          data.originate_uuid = uuid
+
+          profile = "huge-play-#{cfg.session.profile}-egress"
+          context = "#{cfg.session.profile}-egress"
+
+          options =
+
+These are used by `huge-play/middleware/client/setup`.
+
+            session_reference: data._id
+            origination_context: context
+
+And `ccnq4-opensips` requires `X-CCNQ3-Endpoint` for routing.
+
+            'sip_h_X-CCNQ3-Endpoint': data.endpoint
+
+Finally we ensure we can track the call by forcing its UUID.
+
+            origination_uuid: data._id
+
+          params = ("#{k}=#{v}" for own k,v of options).join ','
+
+          sofia = "{#{params}}sofia/#{profile}/sip:#{data.caller}"
+          command = "socket(127.0.0.1:#{socket_port} async full)"
+          argv = [
+            sofia
+            "'&#{command}'"
+
+dialplan
+
+            'none'
+
+context
+
+            context
+
+cid_name -- callee_name, shows on the caller's phone and in Channel-(Orig-)Callee-ID-Name
+
+            data.callee_name ? pkg.name
+
+cid_num -- called_num, shows on the caller's phone and in Channel-(Orig-)Callee-ID-Number
+
+            data.callee_num ? data.destination
+
+timeout_sec
+
+            data.callee_timeout ? 30
+
+          ].join ' '
+          cmd = "originate #{argv}"
+
+          debug "Calling #{cmd}"
+
+          res = yield @api(cmd).catch (error) ->
+            msg = error.stack ? error.toString()
+            debug "originate: #{msg}"
+            {error:"#{msg}"}
+
+The `originate` command will return when the call is answered by the callee (or an error occurred).
+
+          debug "Originate returned", res
+          if res.body?[0] is '+'
+            data.state = 'caller-connected'
+          else
+            data.state = 'caller-failed'
           socket.emit 'reference', data
           yield cfg.update_session_reference_data data
           debug 'Session state:', data.state
