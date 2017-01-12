@@ -54,4 +54,6 @@ FIXME The data sender must do resolution of the endpoint_via and associated tran
         debug 'Client ready'
 
       client.connect (@cfg.socket_port ? 5722), '127.0.0.1'
+
+      socket.emit 'configure', dial_calls: true
       debug 'Module Ready'
