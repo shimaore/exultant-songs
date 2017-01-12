@@ -11,12 +11,16 @@ It ensures data is retrieved and injected in the call.
     @name = "#{pkg.name}:place-call"
     debug = (require 'debug') @name
 
-    @notify = ({socket}) ->
+    @notify = ({cfg,socket}) ->
 
 * cfg.session.profile (string) Sofia profile that should be used to place calls towards client, for automated calls.
 
       unless @cfg.session?.profile?
         debug 'Missing cfg.session.profile, not starting.'
+        return
+
+      unless @cfg.update_session_reference_data?
+        debug 'Missing cfg.update_session_reference_data, not starting.'
         return
 
 See conf/freeswitch
@@ -37,7 +41,7 @@ Connect a single client, and push new calls through it. The calls are automatica
 
 FIXME The data sender must do resolution of the endpoint_via and associated translations????
 
-          yield cfg.set_session_reference_data data
+          yield cfg.update_session_reference_data data
           data._in = [
             "endpoint:#{data.endpoint}"
             "account:#{data.account}"
@@ -49,8 +53,8 @@ FIXME The data sender must do resolution of the endpoint_via and associated tran
           data.state = 'caller-connected'
           data.originate_uuid = uuid
           socket.emit 'reference', data
-          yield cfg.set_session_reference_data data
-          debug 'Caller connected'
+          yield cfg.update_session_reference_data data
+          debug 'Session state:', data.state
         debug 'Client ready'
 
       client.connect (@cfg.socket_port ? 5722), '127.0.0.1'
