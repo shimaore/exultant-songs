@@ -13,7 +13,7 @@ FIXME: use redis instead.
 
     @server_pre = ->
 
-* cfg.session.db (URI) database used to store automated / complete call records (call-center oriented)
+* cfg.session.db (URI) database used to store automated / complete call records (call-center oriented).
 
       unless @cfg.session?.db?
         debug 'Missing cfg.session.db, not starting.'
@@ -23,7 +23,7 @@ FIXME: use redis instead.
         debug 'Another module provided the functions, not starting.'
         return
 
-* cfg.session.db (URI) The PouchDB URI of the database used to store call reference data
+* cfg.session.db (URI) The PouchDB URI of the database used to store call reference data. See session.reference_data, session.reference.
 
       db = new PouchDB @cfg.session.db
 
