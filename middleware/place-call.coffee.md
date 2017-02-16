@@ -125,6 +125,7 @@ The `originate` command will return when the call is answered by the callee (or 
       socket.on 'configured', (data) ->
         debug 'Socket configured', data
 
+      socket.emit 'register', event: 'place-call', default_room:'dial_calls'
       socket.emit 'configure', dial_calls: true
 
       debug 'Module Ready'
