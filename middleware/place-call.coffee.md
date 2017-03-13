@@ -126,12 +126,20 @@ The `originate` command will return when the call is answered by the callee (or 
         debug 'Socket configured', data
 
       init = ->
+        debug 'Socket welcome'
         socket.emit 'register', event: 'place-call', default_room:'dial_calls'
         socket.emit 'configure', dial_calls: true
 
 Register on re-connections (`welcome` is sent by spicy-action when we connect).
 
       socket.on 'welcome', init
+
+      socket.on 'connect', ->
+        debug 'connect'
+      socket.on 'connect_error', ->
+        debug 'connect_error'
+      socket.on 'disconnect', ->
+        debug 'disconnect'
 
 Register manually when we start (the `welcome` message has probably already been seen).
 
