@@ -37,13 +37,18 @@ Connect a single client, and push new calls through it. The calls are automatica
       client = FS.client ->
         socket.on 'place-call', seem (data) =>
           debug 'received place-call', data
-          return unless data._id?.match /^[\w-]+$/
+          return unless data._id?.match /^\d{4}-\d{2}[\w-]+$/
           debug 'Placing call towards caller'
 
 FIXME The data sender must do resolution of the endpoint_via and associated translations????
 ANSWER: Yes. And store the result in `caller`.
 
-          yield cfg.update_session_reference_data data
+          call =
+            uuid: 'place-call'
+            session: "place-call-#{data._id}"
+            start_time: new Date() .toJSON()
+
+          data = yield cfg.update_session_reference_data data, call
           data._in = [
             "endpoint:#{data.endpoint}"
             "account:#{data.account}"
@@ -111,13 +116,14 @@ timeout_sec
 The `originate` command will return when the call is answered by the callee (or an error occurred).
 
           debug "Originate returned", res
+          data.tags ?= []
           if res.body?[0] is '+'
-            data.state = 'caller-connected'
+            data.tags.push 'caller-connected'
           else
-            data.state = 'caller-failed'
+            data.tags.push 'caller-failed'
           socket.emit 'reference', data
-          yield cfg.update_session_reference_data data
-          debug 'Session state:', data.state
+          data = yield cfg.update_session_reference_data data, call
+          debug 'Session state:', data.tags
         debug 'Client ready'
 
       client.connect (@cfg.socket_port ? 5722), '127.0.0.1'

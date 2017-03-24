@@ -39,6 +39,6 @@
     "uuid": "^3.0.1"
   },
   "peerDependencies": {
-    "huge-play": ">=17.8.0"
+    "huge-play": ">=22.2.2"
   }
 }
